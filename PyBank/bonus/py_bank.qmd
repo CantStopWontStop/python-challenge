@@ -22,7 +22,7 @@ library(reticulate)
 ```{python}
 
 import pandas as pd
-budget_data = pd.read_csv("resources/budget_data.csv") 
+budget_data = pd.read_csv("../resources/budget_data.csv") 
 n_months = len(budget_data)
 total = budget_data['Profit/Losses'].sum()
 budget_data['Lag Value'] = budget_data['Profit/Losses'].shift(1)
@@ -52,7 +52,7 @@ print(f'Total Months: {n_months}' + "\n" +
 
 ```{r}
 
-Budget_Data <- read_csv("resources/budget_data.csv") |>  
+Budget_Data <- read_csv("../resources/budget_data.csv") |>  
     rename(Pro_Los = `Profit/Losses`) |> 
     separate(Date, into = c('Month', 'Year'), sep = "-") |> 
     mutate(Month = factor(Month, levels = c("Jan", "Feb", "Mar", 
