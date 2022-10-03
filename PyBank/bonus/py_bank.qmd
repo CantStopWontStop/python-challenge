@@ -1,0 +1,104 @@
+---
+title: "Financial Analysis"
+format: 
+    html:
+        code-fold: true
+editor: visual
+execute: 
+  warning: false
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(scales)
+
+
+library(reticulate)
+```
+
+::: panel-tabset
+## Python
+
+```{python}
+
+import pandas as pd
+budget_data = pd.read_csv("resources/budget_data.csv") 
+n_months = len(budget_data)
+total = budget_data['Profit/Losses'].sum()
+budget_data['Lag Value'] = budget_data['Profit/Losses'].shift(1)
+
+budget_data['Change'] =  budget_data['Profit/Losses'] - budget_data['Lag Value']
+
+avg_change = budget_data['Change'].mean()
+
+max_change = budget_data[budget_data['Change'] == budget_data['Change'].max()]
+
+max_change_date = max_change["Date"].loc[max_change.index[0]]
+
+min_change = budget_data[budget_data['Change'] == budget_data['Change'].min()]
+
+min_change_date = min_change["Date"].loc[min_change.index[0]]
+
+pd.options.display.float_format = '{:, .2f}'.format
+
+print(f'Total Months: {n_months}' + "\n" +
+       f'Total: {total}' + "\n" +
+       f'Average Change: {avg_change}' + "\n" +
+       f'Greatest Increase in Profits: {max_change["Date"].loc[max_change.index[0]]} ({max_change["Change"].loc[max_change.index[0]]})' + "\n" +
+       f'Greatest Decrease in Profits: {min_change["Date"].loc[min_change.index[0]]} ({min_change["Change"].loc[min_change.index[0]]})')
+```
+
+## R
+
+```{r}
+
+Budget_Data <- read_csv("resources/budget_data.csv") |>  
+    rename(Pro_Los = `Profit/Losses`) |> 
+    separate(Date, into = c('Month', 'Year'), sep = "-") |> 
+    mutate(Month = factor(Month, levels = c("Jan", "Feb", "Mar", 
+                                        "Apr","May", "Jun", 
+                                        "Jul", "Aug", "Sep", 
+                                        "Oct", "Nov", "Dec")),
+           Year = as.numeric(Year)) |> 
+    arrange(Year, Month) |> 
+    rowid_to_column("Index")
+
+N_Months <-  Budget_Data |> nrow()
+
+Total <-  Budget_Data |>
+    summarise(Total = dollar(sum(Pro_Los))) 
+
+
+Budget_Data_Form <- Budget_Data |> 
+    mutate(Change = Pro_Los - lag(Pro_Los, 1,
+                                  order_by = Index,
+                                  default = NA)) 
+
+Avg_Change <-  Budget_Data_Form |> 
+    drop_na() |> 
+    summarise(Avg_Change = dollar(mean(Change))) 
+
+Min_Max <- Budget_Data_Form |>
+    replace_na(list(Change = 0)) |> 
+    filter(Change == max(Change) | Change == min(Change))  |> 
+    mutate(Change = dollar(Change),
+           Text   = glue::glue('{Month}-{Year} ({Change})') |> 
+               as.character()) |> 
+    select(Text) |> 
+    rowid_to_column("Index")
+
+Min_Change <- Min_Max |> filter(Index==1) |> select(Text) |> pull()
+Max_Change <- Min_Max |> filter(Index==2) |> select(Text) |> pull()
+```
+
+\
+Total Months: `r N_Months`
+
+Total: `r Total`
+
+Average Change: `r Avg_Change`
+
+Greatest Increase in Profits: `r Max_Change`
+
+Greatest Decrease in Profits: `r Min_Change`
+:::

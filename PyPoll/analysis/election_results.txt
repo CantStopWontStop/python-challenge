@@ -1,0 +1,10 @@
+There were 369,711 ballots cast in this election.
+
+                          Votes     Prcent
+Candidate                                 
+Charles Casper Stockham   85213  23.048543
+Diana DeGette            272892  73.812248
+Raymon Anthony Doane      11606   3.139209
+
+The winner is Diana DeGette.
+

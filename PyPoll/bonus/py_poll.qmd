@@ -1,0 +1,86 @@
+---
+title: "Election Results"
+format: 
+    html:
+        code-tools: true
+        code-fold: true
+execute: 
+    warning: false
+    echo: true
+editor: visual
+---
+
+::: panel-tabset
+## Python
+
+```{python}
+
+import pandas as pd
+import os
+
+
+path = "../resources/election_data.csv"
+
+election_data_raw = pd.read_csv(path)
+
+election_results = election_data_raw.groupby("Candidate").agg(
+    Votes = ('Ballot ID','count')
+)
+
+election_results['Prcent'] = election_results['Votes']/len(election_data_raw) * 100
+
+
+winner = election_results[election_results['Votes'] == election_results['Votes'].max()]
+
+
+print(f'There were {len(election_data_raw):,} ballots cast in this election.' + "\n" + "\n" +
+f'{election_results}' + "\n" + "\n" + f'The winner is {winner.index[0]}.')
+```
+
+## R
+
+```{r}
+
+library(tidyverse)
+library(reticulate)
+library(glue)
+library(gt)
+
+
+election_data_raw <- read_csv('../resources/election_data.csv')
+
+num_of_votes <- tally(election_data_raw) |> 
+    pull(n) |> 
+    format(big.mark = ",")
+
+
+
+election_results <- election_data_raw |>  
+    group_by(Candidate) |> 
+    tally() |> 
+    arrange(desc(n)) |> 
+    rename(Votes = n) |> 
+    ungroup() 
+
+election_results_tbl <- election_results |> 
+    mutate(Percent = (Votes/sum(Votes) * 100) |>
+               formatC(format = "f", 
+                       digits = 1),
+           Votes = format(Votes, big.mark = ","),
+           Votes = glue('{Percent}% ({str_trim(Votes)})')) |>
+    select(-Percent) |> 
+    gt()
+    
+
+
+winner <- election_results |>
+    filter( Votes == max(Votes)) |> 
+    pull(Candidate)
+```
+
+There were `r num_of_votes` ballots cast in the election.
+
+`r election_results_tbl`
+
+The winner of the election is `r winner`.
+:::
